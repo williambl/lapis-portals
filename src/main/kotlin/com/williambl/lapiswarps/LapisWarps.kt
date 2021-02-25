@@ -16,7 +16,13 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.registry.Registry
 import net.minecraft.world.World
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
+import kotlin.random.asKotlinRandom
 
+val portals = HashMultimap.create<Int, BlockPos>()
+
+@ExperimentalContracts
 fun init() {
     UseBlockCallback.EVENT.register { player, world, hand, hitResult ->
         if (world.isClient)
@@ -26,12 +32,39 @@ fun init() {
         if (blockState.isIn(BlockTags.DOORS) && blockState[DoorBlock.OPEN]) {
             val lowerDoorPos = getLowerDoorPos(hitResult.blockPos, blockState)
             val dir = blockState[DoorBlock.FACING].opposite
-            println(checkForMultiBlock(world, lowerDoorPos, dir))
-            println(getItems(world, lowerDoorPos, dir))
+            if (!checkForMultiBlock(world, lowerDoorPos, dir)) return@register ActionResult.PASS
+
+            val channel = getItems(world, lowerDoorPos, dir)
+
+            val otherPortalPos = portals.get(channel)?.filterNot { it == lowerDoorPos }.run {
+                if (this == null || this.isEmpty()) null else this.random(world.random.asKotlinRandom())
+            }
+
+            if (isValidPortal(world, otherPortalPos) && getItems(world, otherPortalPos, world.getBlockState(otherPortalPos)[DoorBlock.FACING].opposite) == channel) {
+                world.setBlockState(otherPortalPos, world.getBlockState(otherPortalPos).with(DoorBlock.OPEN, true))
+                player.teleport(otherPortalPos.x+0.5, otherPortalPos.y.toDouble(), otherPortalPos.z+0.5)
+            } else if (otherPortalPos != null) {
+                portals.remove(channel, otherPortalPos)
+            }
+
+            portals.asMap().asSequence().filter { it.key != channel && it.value.contains(lowerDoorPos) }.map { it.key }.forEach { portals.remove(it, lowerDoorPos) }
+
+            if (!portals.containsValue(lowerDoorPos)) portals.put(channel, lowerDoorPos)
         }
 
         return@register ActionResult.PASS
     }
+}
+
+@ExperimentalContracts
+fun isValidPortal(world: World, pos: BlockPos?): Boolean {
+    contract {
+        returns(true) implies (pos != null)
+    }
+    if (pos == null)
+        return false
+    val blockState = world.getBlockState(pos)
+    return blockState.isIn(BlockTags.DOORS) && checkForMultiBlock(world, getLowerDoorPos(pos, blockState), blockState[DoorBlock.FACING].opposite)
 }
 
 fun getLowerDoorPos(pos: BlockPos, blockState: BlockState): BlockPos =
