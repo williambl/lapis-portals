@@ -3,6 +3,8 @@
   "id": "lapiswarps",
   "version": "${version}",
   "name": "Lapis Warps",
+  "description": "Adds lapis-based portals",
+  "authors": [ "Will BL" ],
   "license": "MIT",
   "icon": "assets/lapiswarps/icon.png",
   "environment": "*",
