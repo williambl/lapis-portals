@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "lapiswarps",
+  "version": "${version}",
+  "name": "Lapis Warps",
+  "license": "MIT",
+  "icon": "assets/lapiswarps/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.williambl.lapiswarps.LapisWarpsKt::init"
+    ]
+  },
+  "mixins": [
+    "lapiswarps.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.11.2",
+    "fabric": "*",
+    "minecraft": ">=1.16.3"
+  }
+}
