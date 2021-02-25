@@ -48,7 +48,7 @@ fun init() {
 
             if (isValidPortal(world, otherPortalPos) && getItems(world, otherPortalPos, world.getBlockState(otherPortalPos)[DoorBlock.FACING].opposite) == channel) {
                 world.setBlockState(otherPortalPos, world.getBlockState(otherPortalPos).with(DoorBlock.OPEN, true))
-                (player as ServerPlayerEntity).teleport(world as ServerWorld, otherPortalPos.x+0.5, otherPortalPos.y.toDouble(), otherPortalPos.z+0.5, world.getBlockState(otherPortalPos)[DoorBlock.FACING].opposite.asRotation(), player.pitch)
+                (player as ServerPlayerEntity).teleport(world as ServerWorld, otherPortalPos.x+0.5, otherPortalPos.y.toDouble(), otherPortalPos.z+0.5, blockState[DoorBlock.FACING].opposite.asRotation()-world.getBlockState(otherPortalPos)[DoorBlock.FACING].opposite.asRotation() + player.yaw, player.pitch)
                 spawnLightning(world, lowerDoorPos)
                 spawnLightning(world, otherPortalPos)
             } else if (otherPortalPos != null) {
@@ -65,7 +65,7 @@ fun init() {
 }
 
 fun registerWorldComponents(registry: WorldComponentFactoryRegistry) {
-    registry.register(LapisWarpsComponent.key) { LapisWarpsComponentImpl() }
+    registry.register(LapisWarpsComponent.key) { world -> LapisWarpsComponentImpl() }
 }
 
 fun spawnLightning(world: World, pos: BlockPos) {
