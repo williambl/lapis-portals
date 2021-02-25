@@ -8,6 +8,8 @@ import net.minecraft.block.Blocks
 import net.minecraft.block.DoorBlock
 import net.minecraft.block.entity.LootableContainerBlockEntity
 import net.minecraft.block.enums.DoubleBlockHalf
+import net.minecraft.entity.EntityType
+import net.minecraft.entity.LightningEntity
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.Item
 import net.minecraft.tag.BlockTags
@@ -43,6 +45,8 @@ fun init() {
             if (isValidPortal(world, otherPortalPos) && getItems(world, otherPortalPos, world.getBlockState(otherPortalPos)[DoorBlock.FACING].opposite) == channel) {
                 world.setBlockState(otherPortalPos, world.getBlockState(otherPortalPos).with(DoorBlock.OPEN, true))
                 player.teleport(otherPortalPos.x+0.5, otherPortalPos.y.toDouble(), otherPortalPos.z+0.5)
+                spawnLightning(world, lowerDoorPos)
+                spawnLightning(world, otherPortalPos)
             } else if (otherPortalPos != null) {
                 portals.remove(channel, otherPortalPos)
             }
@@ -54,6 +58,13 @@ fun init() {
 
         return@register ActionResult.PASS
     }
+}
+
+fun spawnLightning(world: World, pos: BlockPos) {
+    val entity = LightningEntity(EntityType.LIGHTNING_BOLT, world)
+    entity.setCosmetic(true)
+    entity.setPos(pos.x+0.5, pos.y.toDouble(), pos.z+0.5)
+    world.spawnEntity(entity)
 }
 
 @ExperimentalContracts
