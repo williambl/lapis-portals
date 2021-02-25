@@ -9,6 +9,9 @@
   "entrypoints": {
     "main": [
       "com.williambl.lapiswarps.LapisWarpsKt::init"
+    ],
+    "cardinal-components-world": [
+      "com.williambl.lapiswarps.LapisWarpsKt::registerWorldComponents"
     ]
   },
   "mixins": [
@@ -18,5 +21,10 @@
     "fabricloader": ">=0.11.2",
     "fabric": "*",
     "minecraft": ">=1.16.3"
+  },
+  "custom": {
+    "cardinal-components": [
+      "lapiswarps:lapiswarps"
+    ]
   }
 }
