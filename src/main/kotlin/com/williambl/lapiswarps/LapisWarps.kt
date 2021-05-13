@@ -1,12 +1,12 @@
 package com.williambl.lapiswarps
 
-import com.google.common.collect.HashMultimap
 import dev.onyxstudios.cca.api.v3.world.WorldComponentFactoryRegistry
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
-import net.fabricmc.fabric.api.tag.FabricTagBuilder
+import net.fabricmc.fabric.api.gamerule.v1.CustomGameRuleCategory
+import net.fabricmc.fabric.api.gamerule.v1.GameRuleFactory
+import net.fabricmc.fabric.api.gamerule.v1.GameRuleRegistry
 import net.fabricmc.fabric.api.tag.TagRegistry
 import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
 import net.minecraft.block.DoorBlock
 import net.minecraft.block.enums.DoubleBlockHalf
 import net.minecraft.entity.EntityType
@@ -15,7 +15,10 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.item.Item
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
+import net.minecraft.sound.SoundCategory
+import net.minecraft.sound.SoundEvents
 import net.minecraft.tag.BlockTags
+import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
@@ -27,6 +30,9 @@ import kotlin.contracts.contract
 import kotlin.random.asKotlinRandom
 
 val portalTag = TagRegistry.block(Identifier("lapiswarps:portal_blocks"))
+
+val warpsGameruleCategory = CustomGameRuleCategory(Identifier("lapiswarps:lapiswarps"), Text.of("LapisWarps"))
+val lightningGamerule = GameRuleRegistry.register("lapisWarpsCreateLightning", warpsGameruleCategory, GameRuleFactory.createBooleanRule(true))
 
 @ExperimentalContracts
 fun init() {
@@ -54,13 +60,16 @@ fun init() {
             if (isValidPortal(world, otherPortalPos) && getItems(world, otherPortalPos, world.getBlockState(otherPortalPos)[DoorBlock.FACING].opposite) == channel) {
                 world.setBlockState(otherPortalPos, world.getBlockState(otherPortalPos).with(DoorBlock.OPEN, true))
                 (player as ServerPlayerEntity).teleport(world as ServerWorld, otherPortalPos.x+0.5, otherPortalPos.y.toDouble(), otherPortalPos.z+0.5, blockState[DoorBlock.FACING].opposite.asRotation()-world.getBlockState(otherPortalPos)[DoorBlock.FACING].opposite.asRotation() + player.yaw, player.pitch)
-                spawnLightning(world, lowerDoorPos)
-                spawnLightning(world, otherPortalPos)
+                createEffects(world, lowerDoorPos)
+                createEffects(world, otherPortalPos)
             } else if (otherPortalPos != null) {
                 component.portals.remove(channel, otherPortalPos)
             }
 
-            component.portals.asMap().asSequence().filter { it.key != channel && it.value.contains(lowerDoorPos) }.map { it.key }.forEach { component.portals.remove(it, lowerDoorPos) }
+            component.portals.asMap().asSequence()
+                    .filter { it.key != channel && it.value.contains(lowerDoorPos) }
+                    .map { it.key }
+                    .forEach { component.portals.remove(it, lowerDoorPos) }
 
             if (!component.portals.containsValue(lowerDoorPos)) component.portals.put(channel, lowerDoorPos)
         }
@@ -73,11 +82,15 @@ fun registerWorldComponents(registry: WorldComponentFactoryRegistry) {
     registry.register(LapisWarpsComponent.key) { world -> LapisWarpsComponentImpl() }
 }
 
-fun spawnLightning(world: World, pos: BlockPos) {
-    val entity = LightningEntity(EntityType.LIGHTNING_BOLT, world)
-    entity.setCosmetic(true)
-    entity.setPos(pos.x+0.5, pos.y.toDouble(), pos.z+0.5)
-    world.spawnEntity(entity)
+fun createEffects(world: World, pos: BlockPos) {
+    if (world.gameRules.getBoolean(lightningGamerule)) {
+        val entity = LightningEntity(EntityType.LIGHTNING_BOLT, world)
+        entity.setCosmetic(true)
+        entity.setPos(pos.x + 0.5, pos.y.toDouble(), pos.z + 0.5)
+        world.spawnEntity(entity)
+    } else {
+        world.playSound(null, pos, SoundEvents.ENTITY_ENDERMAN_TELEPORT, SoundCategory.BLOCKS, 1f, 1f)
+    }
 }
 
 @ExperimentalContracts
