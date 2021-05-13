@@ -3,6 +3,8 @@ package com.williambl.lapiswarps
 import com.google.common.collect.HashMultimap
 import dev.onyxstudios.cca.api.v3.world.WorldComponentFactoryRegistry
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
+import net.fabricmc.fabric.api.tag.FabricTagBuilder
+import net.fabricmc.fabric.api.tag.TagRegistry
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
 import net.minecraft.block.DoorBlock
@@ -15,6 +17,7 @@ import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.tag.BlockTags
 import net.minecraft.util.ActionResult
+import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.registry.Registry
@@ -22,6 +25,8 @@ import net.minecraft.world.World
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 import kotlin.random.asKotlinRandom
+
+val portalTag = TagRegistry.block(Identifier("lapiswarps:portal_blocks"))
 
 @ExperimentalContracts
 fun init() {
@@ -124,5 +129,5 @@ fun checkForMultiBlock(world: World, pos: BlockPos, dir: Direction): Boolean {
             world.getBlockState(mut.set(pos).move(Direction.UP, 2)),
             world.getBlockState(mut.set(pos).move(dir.opposite)),
             world.getBlockState(mut.move(Direction.UP))
-    ).all { it.block == Blocks.LAPIS_BLOCK } //TODO make it a tag
+    ).all { it.block.isIn(portalTag) }
 }
