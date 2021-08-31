@@ -142,5 +142,5 @@ fun checkForMultiBlock(world: World, pos: BlockPos, dir: Direction): Boolean {
             world.getBlockState(mut.set(pos).move(Direction.UP, 2)),
             world.getBlockState(mut.set(pos).move(dir.opposite)),
             world.getBlockState(mut.move(Direction.UP))
-    ).all { it.block.isIn(portalTag) }
+    ).all { portalTag.contains(it.block) }
 }
